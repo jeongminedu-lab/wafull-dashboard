@@ -31,8 +31,8 @@ async function loadCSV(url) {
 
 async function drawCharts() {
 
-  const base = "const base = "https://docs.google.com/spreadsheets/d/1xXkAzzSkQN2WtH5RC5Z0z1jqT7-jHwE73mBP5Y5wkaY/gviz/tq?tqx=out:csv&sheet=";
-";
+const base = "https://docs.google.com/spreadsheets/d/1xXkAzzSkQN2WtH5RC5Z0z1jqT7-jHwE73mBP5Y5wkaY/gviz/tq?tqx=out:csv&sheet=";
+
 
   // ⭐ study_time
   const timeData = await loadCSV(base + "study_time");
