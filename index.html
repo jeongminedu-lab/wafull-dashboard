@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>와풀 대시보드</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    h2 { margin-top: 40px; }
+    canvas { max-width: 900px; margin-bottom: 50px; }
+  </style>
+</head>
+
+<body>
+
+  <h1>📊 와풀 학습 대시보드</h1>
+
+  <h2>📈 일별 학습시간</h2>
+  <canvas id="chartDaily"></canvas>
+
+  <h2>📚 과목별 학습시간</h2>
+  <canvas id="chartCourse"></canvas>
+
+<script>
+// CSV 로드 함수
+async function loadCSV(url) {
+  const text = await fetch(url).then(r => r.text());
+  return text.trim().split("\n").map(r => r.split(","));
+}
+
+async function drawCharts() {
+
+  const base = "https://docs.google.com/spreadsheets/d/https://docs.google.com/spreadsheets/d/1xXkAzzSkQN2WtH5RC5Z0z1jqT7-jHwE73mBP5Y5wkaY/edit?gid=1573394441#gid=1573394441
+/gviz/tq?tqx=out:csv&sheet=";
+
+  // ⭐ study_time
+  const timeData = await loadCSV(base + "study_time");
+  const timeLabels = timeData.slice(1).map(r => r[0]); 
+  const totalStudy = timeData.slice(1).map(r => Number(r[2])); 
+
+  new Chart(document.getElementById("chartDaily"), {
+    type: "line",
+    data: {
+      labels: timeLabels,
+      datasets: [{
+        label: "총 학습시간",
+        data: totalStudy,
+        borderColor: "blue",
+        borderWidth: 2,
+        tension: 0.2,
+        fill: false
+      }]
+    }
+  });
+
+  // ⭐ study_course
+  const courseData = await loadCSV(base + "study_course");
+  const courseLabels = courseData.slice(1).map(r => r[1]); 
+  const courseTimes = courseData.slice(1).map(r => Number(r[3])); 
+
+  new Chart(document.getElementById("chartCourse"), {
+    type: "bar",
+    data: {
+      labels: courseLabels,
+      datasets: [{
+        label: "과정별 총 학습시간",
+        data: courseTimes,
+        backgroundColor: "orange"
+      }]
+    }
+  });
+}
+
+drawCharts();
+</script>
+
+</body>
+</html>
