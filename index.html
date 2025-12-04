@@ -1,27 +1,3 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <title>와풀 대시보드</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    h2 { margin-top: 40px; }
-    canvas { max-width: 900px; margin-bottom: 50px; }
-  </style>
-</head>
-
-<body>
-
-  <h1>📊 와풀 학습 대시보드</h1>
-
-  <h2>📈 일별 학습시간</h2>
-  <canvas id="chartDaily"></canvas>
-
-  <h2>📚 과목별 학습시간</h2>
-  <canvas id="chartCourse"></canvas>
-
 <script>
 // CSV 로드 함수
 async function loadCSV(url) {
@@ -33,30 +9,75 @@ async function drawCharts() {
 
   const base = "https://docs.google.com/spreadsheets/d/1xXkAzzSkQN2WtH5RC5Z0z1jqT7-jHwE73mBP5Y5wkaY/gviz/tq?tqx=out:csv&sheet=";
 
-  // ⭐ study_time
+  // ⭐ study_time 로드
   const timeData = await loadCSV(base + "study_time");
-  const timeLabels = timeData.slice(1).map(r => r[0]); 
-  const totalStudy = timeData.slice(1).map(r => Number(r[2])); 
+  
+  // 헤더 제외 데이터
+  const rows = timeData.slice(1);
 
-  new Chart(document.getElementById("chartDaily"), {
-    type: "line",
-    data: {
-      labels: timeLabels,
-      datasets: [{
-        label: "총 학습시간",
-        data: totalStudy,
-        borderColor: "blue",
-        borderWidth: 2,
-        tension: 0.2,
-        fill: false
-      }]
-    }
+  // 날짜 / 학습시간 파싱
+  const parsed = rows.map(r => ({
+    date: r[0],                      // 2024-09-28
+    month: r[0].slice(0, 7),         // 2024-09
+    total: Number(r[2])              // 총학습시간
+  }));
+
+  // 월 목록 생성
+  const monthSet = [...new Set(parsed.map(e => e.month))].sort();
+  const monthSelect = document.getElementById("monthSelect");
+
+  monthSet.forEach(m => {
+    const op = document.createElement("option");
+    op.value = m;
+    op.textContent = m;
+    monthSelect.appendChild(op);
   });
 
-  // ⭐ study_course
+  let chartDaily;
+
+  function renderDailyChart(selectedMonth) {
+    let filtered = parsed;
+
+    if (selectedMonth) {
+      filtered = parsed.filter(r => r.month === selectedMonth);
+    }
+
+    const labels = filtered.map(r => r.date);
+    const totals = filtered.map(r => r.total);
+
+    if (chartDaily) chartDaily.destroy();
+
+    chartDaily = new Chart(document.getElementById("chartDaily"), {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "총 학습시간",
+          data: totals,
+          borderColor: "blue",
+          borderWidth: 2,
+          fill: false,
+          tension: 0.2
+        }]
+      }
+    });
+  }
+
+  // 최초 전체 렌더링
+  renderDailyChart("");
+
+  // 월 선택 이벤트
+  monthSelect.addEventListener("change", e => {
+    renderDailyChart(e.target.value);
+  });
+
+
+  // ⭐ study_course 차트도 그대로 유지
   const courseData = await loadCSV(base + "study_course");
-  const courseLabels = courseData.slice(1).map(r => r[1]); 
-  const courseTimes = courseData.slice(1).map(r => Number(r[3])); 
+  const courseRows = courseData.slice(1);
+
+  const courseLabels = courseRows.map(r => r[1]); 
+  const courseTimes = courseRows.map(r => Number(r[3])); 
 
   new Chart(document.getElementById("chartCourse"), {
     type: "bar",
@@ -73,6 +94,3 @@ async function drawCharts() {
 
 drawCharts();
 </script>
-
-</body>
-</html>
